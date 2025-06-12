@@ -1,0 +1,47 @@
+# Node modules
+node_modules/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Cache และ build files
+.cache/
+build/
+dist/
+
+# Environment variables
+.env
+.env.test
+.env.local
+
+# Dependencies (Bower, Yarn, JSPM)
+bower_components/
+.yarn/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# VSCode และ editor-related
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Output ของ npm pack
+*.tgz
+
+# Coverage data
+coverage/
+
+# Sequelize migration และ seed files
+migrations/
+seeders/
