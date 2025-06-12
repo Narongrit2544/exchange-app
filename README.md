@@ -57,17 +57,37 @@
 | GET    | `/api/transactions` | ดูธุรกรรมทั้งหมด                        |
 | POST   | `/api/transactions` | สร้างธุรกรรมใหม่ (โอนภายใน/ภายนอก)    |
 
-6. ตัวอย่างทดสอบ API  
+6. ตัวอย่างทดสอบ API ใช้ Postman ในการทดสอบ
 - ดูเหรียญทั้งหมด
-    ```bash
-        curl http://localhost:5000/api/currencies
+   - Method: GET
+   - URL: http://localhost:5000/api/currencies
+จะได้รายการเหรียญทั้งหมดในระบบ เช่น BTC, ETH
+
 - สร้างคำสั่งซื้อขาย
+    - Method: POST
+    - URL: http://localhost:5000/api/orders
+    - Body: เลือก raw → JSON และใส่:
     ```bash
-        curl -X POST http://localhost:5000/api/orders \
-        -H "Content-Type: application/json" \
-        -d '{"buyer_id":1,"seller_id":2,"currency_id":2,"amount":1.5,"price":120000,"status":"pending"}'
+        {
+            "buyer_id": 1,
+            "seller_id": 2,
+            "currency_id": 2,
+            "amount": 1.5,
+            "price": 120000,
+            "status": "pending"
+        }
+
 - โอนเหรียญ
+    - Method: POST
+    - URL: http://localhost:5000/api/transactions
+    - Body: เลือก raw → JSON และใส่:
+
     ```bash
-        curl -X POST http://localhost:5000/api/transactions \
-        -H "Content-Type: application/json" \
-        -d '{"order_id":1,"payment_id":1,"amount":120000,"recipient_address":"0xabc123","status":"confirmed","is_internal":true}'
+        {
+            "order_id": 1,
+            "payment_id": 1,
+            "amount": 120000,
+            "recipient_address": "0xabc123",
+            "status": "confirmed",
+            "is_internal": true
+        }
