@@ -1,7 +1,7 @@
 module.exports = (sequelize, DataTypes) => {
   const Order = sequelize.define('Order', {
-    order_id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-    buyer_id: { type: DataTypes.INTEGER, allowNull: false },
+    order_id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true ,allowNull: true },
+    buyer_id: { type: DataTypes.INTEGER, allowNull: true },
     seller_id: { type: DataTypes.INTEGER, allowNull: false },
     currency_id: { type: DataTypes.INTEGER, allowNull: false },
     amount: DataTypes.FLOAT,

@@ -1,6 +1,6 @@
 module.exports = (sequelize, DataTypes) => {
   const PaymentMethod = sequelize.define('PaymentMethod', {
-    payment_id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    payment_id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true ,allowNull:true },
     user_id: { type: DataTypes.INTEGER, allowNull: false },
     method_type: DataTypes.STRING,
     details: DataTypes.STRING

@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Crypto Exchange Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            margin: 0;
+            padding: 2rem;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        button {
+            margin: 0.5rem;
+            padding: 0.6rem 1.2rem;
+            font-size: 1rem;
+            border: none;
+            background: #007bff;
+            color: #fff;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        form {
+            background: #fff;
+            padding: 1rem;
+            margin-top: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        form h3 {
+            margin-top: 0;
+        }
+
+        input {
+            margin: 0.3rem;
+            padding: 0.5rem;
+            font-size: 1rem;
+            width: 150px;
+        }
+
+        #output {
+            margin-top: 2rem;
+            background: #fff;
+            padding: 1rem;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        table,
+        th,
+        td {
+            border: 1px solid #ccc;
+        }
+
+        th,
+        td {
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>💱 Crypto API Dashboard</h1>
+
+    <div>
+        <button onclick="callApi('/users')">📋 Users</button>
+        <button onclick="callApi('/currencies')">💱 Currencies</button>
+        <button onclick="callApi('/wallets')">💰 Wallets</button>
+        <button onclick="callApi('/orders')">📄 Orders</button>
+        <button onclick="callApi('/transactions')">🔁 Transactions</button>
+    </div>
+    <!--
+    <form onsubmit="submitTransfer(event)">
+        <h3>🔁 โอนเหรียญ</h3>
+        <input type="number" id="sender" placeholder="Sender ID" required />
+        <input type="number" id="receiver" placeholder="Receiver ID" required />
+        <input type="number" id="currency" placeholder="Currency ID" required />
+        <input type="number" id="amount" step="0.01" placeholder="Amount" required />
+        <button type="submit">🚀 โอน</button>
+    </form>
+-->
+    <!-- สร้างออร์เดอร์ -->
+    <form onsubmit="submitOrder(event)">
+        <h3>📝 สร้างออร์เดอร์</h3>
+        <select id="seller" required></select>
+        <select id="orderCurrency" required></select>
+        <input type="number" id="orderAmount" step="0.01" placeholder="Amount" required />
+        <input type="number" id="orderPrice" step="0.01" placeholder="ราคาต่อหน่วย (USDT)" required />
+        <button type="submit">📤 สร้าง Order</button>
+    </form>
+    <!-- ซื้อออร์เดอร์ -->
+    <form onsubmit="submitBuyOrder(event)">
+        <h3>🛒 ซื้อ Order</h3>
+        <input type="number" id="order_id" placeholder="Order ID" required />
+        <select id="buyer_id" required></select>
+        <button type="submit">💸 ซื้อ</button>
+    </form>
+
+    <!-- ✨ แบบฟอร์มเพิ่มเงิน -->
+    <form onsubmit="submitAddBalance(event)">
+        <h3>💳 เติมเงินให้ผู้ใช้</h3>
+        <select id="topupUserId" required></select>
+        <select id="topupCurrency" required></select>
+        <input type="number" id="topupAmount" step="0.01" placeholder="Amount" required />
+        <button type="submit">➕ เติมเงิน</button>
+    </form>
+
+
+    <div id="output">
+        👉 Output will appear here...
+    </div>
+
+    <script>
+        let currencyMap = {}; // { id: 'BTC' }
+        let users = [];       // [{ user_id, name }]
+        let currencies = [];  // [{ currency_id, symbol }]
+
+        const BASE_URL = 'http://localhost:5000/api';
+
+        async function callApi(endpoint) {
+            const output = document.getElementById('output');
+            output.innerHTML = '⏳ Loading...';
+            try {
+                const res = await fetch(BASE_URL + endpoint);
+                const data = await res.json();
+                renderData(data);
+            } catch (err) {
+                output.textContent = '❌ Error: ' + err.message;
+            }
+        }
+        function populateUserDropdowns() {
+            const sellerSelect = document.getElementById('seller');
+            const buyerSelect = document.getElementById('buyer_id');
+
+            sellerSelect.innerHTML = '<option value="">เลือกผู้ขาย</option>';
+            buyerSelect.innerHTML = '<option value="">เลือกผู้ซื้อ</option>';
+
+            users.forEach(user => {
+                const opt1 = document.createElement('option');
+                opt1.value = user.user_id;
+                opt1.textContent = `${user.name} (${user.user_id})`;
+                sellerSelect.appendChild(opt1);
+
+                const opt2 = document.createElement('option');
+                opt2.value = user.user_id;
+                opt2.textContent = `${user.name} (${user.user_id})`;
+                buyerSelect.appendChild(opt2);
+            });
+
+            const topupSelect = document.getElementById('topupUserId');
+            if (topupSelect) {
+                topupSelect.innerHTML = '<option value="">เลือกผู้ใช้</option>';
+                users.forEach(user => {
+                    const opt = document.createElement('option');
+                    opt.value = user.user_id;
+                    opt.textContent = `${user.name} (${user.user_id})`;
+                    topupSelect.appendChild(opt);
+                });
+            }
+        }
+
+        async function submitTransfer(e) {
+            e.preventDefault();
+            const payload = {
+                sender_id: +document.getElementById('sender').value,
+                receiver_id: +document.getElementById('receiver').value,
+                currency_id: +document.getElementById('currency').value,
+                amount: parseFloat(document.getElementById('amount').value)
+            };
+            postData('/wallets/transfer', payload);
+        }
+        async function loadUsers() {
+            try {
+                const res = await fetch(BASE_URL + '/users');
+                users = await res.json();
+                populateUserDropdowns();
+            } catch (err) {
+                console.error('Error loading users:', err);
+            }
+        }
+
+
+        async function loadCurrencies() {
+            try {
+                const res = await fetch(BASE_URL + '/currencies');
+                currencies = await res.json();
+                currencyMap = {};
+                const select = document.getElementById('topupCurrency');
+                select.innerHTML = '';
+                currencies.forEach(curr => {
+                    currencyMap[curr.currency_id] = curr.symbol || curr.name;
+                    const opt = document.createElement('option');
+                    opt.value = curr.currency_id;
+                    opt.textContent = `${curr.symbol} (${curr.currency_id})`;
+                    select.appendChild(opt);
+                });
+                populateCurrencyDropdowns(); // เพิ่มเติม
+            } catch (err) {
+                console.error('Error loading currencies', err);
+            }
+        }
+
+        async function submitOrder(e) {
+            e.preventDefault();
+            const payload = {
+                seller_id: +document.getElementById('seller').value,
+                currency_id: +document.getElementById('orderCurrency').value,
+                amount: parseFloat(document.getElementById('orderAmount').value),
+                price: parseFloat(document.getElementById('orderPrice').value)
+            };
+            postData('/orders', payload);
+        }
+
+        async function submitBuyOrder(e) {
+            e.preventDefault();
+            const order_id = document.getElementById('order_id').value;
+            const buyer_id = document.getElementById('buyer_id').value;
+            const payload = { buyer_id: +buyer_id };
+            postData(`/orders/${order_id}/buy`, payload);
+        }
+
+        async function postData(endpoint, payload) {
+            const output = document.getElementById('output');
+            output.innerHTML = '⏳ Processing...';
+            try {
+                const res = await fetch(BASE_URL + endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                renderData(data);
+            } catch (err) {
+                output.textContent = '❌ Error: ' + err.message;
+            }
+        }
+
+
+        // 🪙 เติมเงินให้ผู้ใช้
+        async function submitAddBalance(e) {
+            e.preventDefault();
+            const user_id = +document.getElementById('topupUserId').value;
+            const currency_id = +document.getElementById('topupCurrency').value;
+            const amount = parseFloat(document.getElementById('topupAmount').value);
+
+            postData('/wallets/add', { user_id, currency_id, amount });
+        }
+
+        function renderData(data) {
+            const output = document.getElementById('output');
+
+            if (Array.isArray(data)) {
+                if (data.length === 0) {
+                    output.textContent = '📭 No data found.';
+                    return;
+                }
+
+                const first = data[0];
+                const isWallets = data.some(row => row.User && row.Currency);
+                const isOrders = data.some(row => row.Buyer && row.Seller && row.Currency);
+
+                let keys = Object.keys(first).filter(key => {
+                    if (isWallets && ['user_id', 'currency_id'].includes(key)) return false;
+                    if (isOrders && ['buyer_id', 'seller_id', 'currency_id', 'Buyer', 'Seller', 'Currency'].includes(key)) return false;
+                    return true;
+                });
+
+                if (isWallets) {
+                    keys.unshift('user_name');
+                    keys.unshift('currency_symbol');
+                } else if (isOrders) {
+                    keys.unshift('buyer_name');
+                    keys.unshift('seller_name');
+                    keys.unshift('currency_symbol');
+                }
+
+                let html = '<table><thead><tr>';
+                html += keys.map(key => `<th>${key}</th>`).join('');
+                html += '</tr></thead><tbody>';
+
+                data.forEach(row => {
+                    html += '<tr>';
+                    keys.forEach(key => {
+                        if (key === 'user_name') {
+                            html += `<td>${row.User ? row.User.name : '-'}</td>`;
+                        } else if (key === 'currency_symbol') {
+                            html += `<td>${row.Currency ? row.Currency.symbol : '-'}</td>`;
+                        } else if (key === 'buyer_name') {
+                            html += `<td>${row.Buyer ? row.Buyer.name : '-'}</td>`;
+                        } else if (key === 'seller_name') {
+                            html += `<td>${row.Seller ? row.Seller.name : '-'}</td>`;
+                        } else {
+                            const val = row[key];
+                            html += `<td>${typeof val === 'object' ? JSON.stringify(val) : val}</td>`;
+                        }
+                    });
+                    html += '</tr>';
+                });
+
+                html += '</tbody></table>';
+                output.innerHTML = html;
+            } else {
+                // ถ้าเป็น object (ไม่ใช่ array) เช่น { message, order }
+                if (data.message && data.order) {
+                    output.innerHTML = `<div style="color: green;">✅ ${data.message}</div><pre>${JSON.stringify(data.order, null, 2)}</pre>`;
+                } else if (data.error) {
+                    output.innerHTML = `<div style="color: red;">❌ ${data.error}</div>`;
+                } else {
+                    output.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                }
+            }
+        }
+
+
+
+        function populateCurrencyDropdowns() {
+            const orderCurrencySelect = document.getElementById('orderCurrency');
+            if (!orderCurrencySelect) return;
+
+            orderCurrencySelect.innerHTML = '<option value="">เลือกเหรียญ</option>';
+            currencies.forEach(curr => {
+                const opt = document.createElement('option');
+                opt.value = curr.currency_id;
+                opt.textContent = `${curr.symbol || curr.name} (${curr.currency_id})`;
+                orderCurrencySelect.appendChild(opt);
+            });
+        }
+
+
+        window.onload = () => {
+            loadCurrencies();
+            loadUsers();
+        };
+
+    </script>
+</body>
+
+</html>
