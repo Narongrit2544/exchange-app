@@ -38,10 +38,12 @@
 3. ติดตั้ง Dependencies
     ```bash
         npm install
-4. การ Seed ข้อมูล 
+4. Import file Database ลง local ของตนเอง ในไฟล์นี้ใช้ Mysql
+
+5. การ Seed ข้อมูล 
     ```bash
         node seeders/seed.js
-5. การรันเซิร์ฟเวอร์
+6. การรันเซิร์ฟเวอร์
     ```bash 
         npm run dev
 
@@ -57,7 +59,7 @@
 | GET    | `/api/transactions` | ดูธุรกรรมทั้งหมด                        |
 | POST   | `/api/transactions` | สร้างธุรกรรมใหม่ (โอนภายใน/ภายนอก)    |
 
-6. ตัวอย่างทดสอบ API ใช้ Postman ในการทดสอบ
+7. ตัวอย่างทดสอบ API ใช้ Postman ในการทดสอบ
 - ดูเหรียญทั้งหมด
    - Method: GET
    - URL: http://localhost:5000/api/currencies
@@ -91,3 +93,7 @@
             "status": "confirmed",
             "is_internal": true
         }
+
+8. สามารถใช้รันไฟล์ Dashboard.html ในการทดสอบได้
+
+    ![Dashboard Preview](https://img5.pic.in.th/file/secure-sv1/Screenshot-2025-06-13-160609.png)
